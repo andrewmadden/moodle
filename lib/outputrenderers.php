@@ -3813,6 +3813,28 @@ EOD;
     }
 
     /**
+     * Renders opening of container for content relating to a tab with accessibility markup.
+     * After rendering the content, tab_content_end must be called.
+     *
+     * @param string    $label Identifier relating the content to a tab.
+     * @return string   Output
+     * @throws coding_exception
+     */
+    public final function tab_content_start($label) {
+        return $this->render(new tab_content_start($label));
+    }
+
+    /**
+     * Renders close of container for content relating to a tab with accessibility markup.
+     * tab_content_start must be called before tab_content_end.
+     *
+     * @return string Output
+     */
+    public final function tab_content_end() {
+        return html_writer::end_div();
+    }
+
+    /**
      * Renders tabtree
      *
      * @param tabtree $tabtree

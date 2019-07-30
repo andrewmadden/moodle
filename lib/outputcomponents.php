@@ -3832,6 +3832,8 @@ class tabobject implements renderable, templatable {
     var $subtree = array();
     /** @var int level of tab in the tree, 0 for root (instance of tabtree), 1 for the first row of tabs */
     var $level = 1;
+    /** @var string Accessibility label relating tab to content. */
+    private $label;
 
     /**
      * Constructor
@@ -3841,13 +3843,15 @@ class tabobject implements renderable, templatable {
      * @param string $text text on the tab
      * @param string $title title under the link, by defaul equals to text
      * @param bool $linkedwhenselected whether to display a link under the tab name when it's selected
+     * @param string $label Label to link tab to content for accessibility. Defaults to formatted title.
      */
-    public function __construct($id, $link = null, $text = '', $title = '', $linkedwhenselected = false) {
+    public function __construct($id, $link = null, $text = '', $title = '', $linkedwhenselected = false, $label = '') {
         $this->id = $id;
         $this->link = $link;
         $this->text = $text;
         $this->title = $title ? $title : $text;
         $this->linkedwhenselected = $linkedwhenselected;
+        $this->label = $label;
     }
 
     /**
@@ -3925,6 +3929,7 @@ class tabobject implements renderable, templatable {
             'inactive' => !$active && $this->inactive,
             'active' => $active,
             'level' => $this->level,
+            'label' => $this->label,
         ];
     }
 
@@ -4088,6 +4093,45 @@ class tabtree extends tabobject {
         return (object) [
             'tabs' => $tabs,
             'secondrow' => $secondrow ? $secondrow->export_for_template($output) : false
+        ];
+    }
+}
+
+/**
+ * Renderable for content pertaining to a tab
+ *
+ * It opens a container for content relating to a specific tab using accessibility labels.
+ *
+ * @copyright 2019 Catalyst IT
+ * @author Andrew Madden <andrewmadden@catalyst-au.net>
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @since Moodle 3.8
+ * @package core
+ * @category output
+ */
+class tab_content_start implements renderable, templatable {
+
+    /** @var string Accessibility label for screen reader */
+    private $label;
+
+    /**
+     * tab_content_start constructor.
+     *
+     * @param string $label Identifier relating to its tab.
+     */
+    public function __construct($label) {
+        $this->label = $label;
+    }
+
+    /**
+     * Export for template
+     *
+     * @param renderer_base $output Renderer.
+     * @return array
+     */
+    public function export_for_template(renderer_base $output) {
+        return [
+            'label' => $this->label,
         ];
     }
 }
