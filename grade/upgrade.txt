@@ -21,3 +21,10 @@ Information provided here is intended especially for developers.
   but should use the gpr->groupid parameter instead.
 * The grade_plugin_return constructor now accepts either course or
   courseid as a parameter to specify course.
+
+=== 3.8 ===
+
+* The print_grade_page_head function now has a corresponding
+  print_grade_page_foot function that must be used instead of the
+  standard $OUTPUT->footer when creating pages. Not using it may
+  result in invalid html.

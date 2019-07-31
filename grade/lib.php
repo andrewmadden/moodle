@@ -809,7 +809,8 @@ function grade_print_tabs($active_type, $active_plugin, $plugin_info, $return=fa
 
         if ($active_type == $plugin_type) {
             foreach ($plugins as $plugin) {
-                $bottom_row[] = new tabobject($plugin->id, $plugin->link, $plugin->string);
+                $bottom_row[] = new tabobject($plugin->id, $plugin->link, $plugin->string, $plugin->string,
+                        false, $plugin->htmlid);
                 if ($plugin->id == $active_plugin) {
                     $inactive = array($plugin->id);
                 }
@@ -834,6 +835,32 @@ function grade_print_tabs($active_type, $active_plugin, $plugin_info, $return=fa
         return $rv;
     } else {
         echo $rv;
+    }
+}
+
+/**
+ * Prints the start of the container for the content related to a specific tab.
+ *
+ * @param array     $plugininfo Contains information about all plugins.
+ * @param string    $activetype Currently selected grade plugin type.
+ * @param string    $activeplugin Currently selected grade plugin.
+ * @param bool      $return Whether output is printed directly.
+ * @return string   If $return is true, return rendered output
+ */
+function print_grade_tab_container_start($plugininfo, $activetype, $activeplugin, $return = false) {
+    global $OUTPUT;
+
+    // MDL-65367 Currently some plugins do not automatically generate a htmlid such as the Scales report.
+    if (isset($plugininfo[$activetype][$activeplugin])) {
+        $label = $plugininfo[$activetype][$activeplugin]->htmlid;
+    } else {
+        $label = '';
+    }
+
+    if ($return) {
+        return $OUTPUT->tab_content_start($label);
+    } else {
+        echo $OUTPUT->tab_content_start($label);
     }
 }
 
@@ -897,6 +924,8 @@ function grade_get_plugin_info($courseid, $active_type, $active_plugin) {
                 if ($active_plugin == $plugin->id) {
                     $plugin_info['strings']['active_plugin_str'] = $plugin->string;
                 }
+                // MDL-65367 Give each plugin a unique id for HTML and aria labels.
+                $plugin->htmlid = html_writer::random_id('grade_');
             }
         }
     }
@@ -962,6 +991,9 @@ class grade_plugin_info {
  * in favour of the usual print_header(), print_header_simple(), print_heading() etc.
  * !IMPORTANT! Use of tabs.php file in gradebook pages is forbidden unless tabs are switched off at
  * the site level for the gradebook ($CFG->grade_navmethod = GRADE_NAVMETHOD_DROPDOWN).
+ *
+ * MDL-65367 If print_grade_page_head is used for the header of a page, then print_grade_page_foot should be used
+ * for the footer.
  *
  * @param int     $courseid Course id
  * @param string  $active_type The type of the current page (report, settings,
@@ -1080,7 +1112,22 @@ function print_grade_page_head($courseid, $active_type, $active_plugin=null,
         if ($courseid != SITEID &&
                 ($CFG->grade_navmethod == GRADE_NAVMETHOD_COMBO || $CFG->grade_navmethod == GRADE_NAVMETHOD_TABS)) {
             $returnval .= grade_print_tabs($active_type, $active_plugin, $plugin_info, $return);
+            // MDL-65367 Open container for content relating to active tab.
+            $returnval .= print_grade_tab_container_start($plugin_info, $active_type, $active_plugin, $return);
         }
+
+        // MDL-65367 Register callback to check if print_grade_page_foot was also implemented for tabbed content.
+        $OUTPUT->gradeheadfootcomplete = false;
+
+        core_shutdown_manager::register_function(function() {
+            global $OUTPUT;
+            if (isset($OUTPUT->gradeheadfootcomplete)) {
+                debugging('If implementing print_grade_page_head for the page header,
+                        you must also implement print_grade_page_foot for the footer.',
+                    DEBUG_DEVELOPER);
+                unset($OUTPUT->gradeheadfootcomplete);
+            }
+        });
     }
 
     $returnval .= print_natural_aggregation_upgrade_notice($courseid,
@@ -1090,6 +1137,29 @@ function print_grade_page_head($courseid, $active_type, $active_plugin=null,
 
     if ($return) {
         return $returnval;
+    }
+}
+
+/**
+ * Prints the footer that compliments print_grade_page_head. All gradebook pages MUST use these functions.
+ *
+ * @param bool $return If true, the contents will not be printed.
+ * @return string Returns content if $return set to true.
+ */
+function print_grade_page_foot($return = false) {
+    global $OUTPUT;
+    $content = '';
+
+    // MDL-65367 Unset flag from header so callback knows that both header and footer were implemented.
+    unset($OUTPUT->gradeheadfootcomplete);
+
+    $content .= $OUTPUT->tab_content_end();
+    $content .= $OUTPUT->footer();
+
+    if ($return) {
+        return $content;
+    } else {
+        echo $content;
     }
 }
 
