@@ -196,4 +196,4 @@ if (has_capability('moodle/grade:viewall', $context) && $courseid != SITEID) {
 
 grade_report_overview::viewed($context, $courseid, $userid);
 
-echo $OUTPUT->footer();
+print_grade_page_foot();

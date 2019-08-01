@@ -191,4 +191,4 @@ if (isset($report)) {
     echo $OUTPUT->notification(get_string('nostudentsyet'));
 }
 
-echo $OUTPUT->footer();
+print_grade_page_foot();

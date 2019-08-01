@@ -83,5 +83,5 @@ echo $OUTPUT->box_start();
 $mform->display();
 echo $OUTPUT->box_end();
 
-echo $OUTPUT->footer();
+print_grade_page_foot();
 

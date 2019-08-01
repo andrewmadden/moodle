@@ -75,7 +75,7 @@ if (!$iid) {
         $csvimporterror = $csvimport->get_error();
         if (!empty($csvimporterror)) {
             echo $renderer->errors(array($csvimport->get_error()));
-            echo $OUTPUT->footer();
+            print_grade_page_foot();
             die();
         }
         $iid = $csvimport->get_iid();
@@ -83,7 +83,7 @@ if (!$iid) {
     } else {
         // Display the standard upload file form.
         echo $renderer->standard_upload_file_form($course, $mform);
-        echo $OUTPUT->footer();
+        print_grade_page_foot();
         die();
     }
 }
@@ -122,9 +122,9 @@ if ($formdata = $mform2->get_data()) {
         $errors[] = get_string('importfailed', 'grades');
         echo $renderer->errors($errors);
     }
-    echo $OUTPUT->footer();
+    print_grade_page_foot();
 } else {
     // If data hasn't been submitted then display the data mapping form.
     $mform2->display();
-    echo $OUTPUT->footer();
+    print_grade_page_foot();
 }

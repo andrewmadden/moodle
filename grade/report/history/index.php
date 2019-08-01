@@ -122,4 +122,4 @@ if ($showreport) {
     $event->trigger();
 }
 
-echo $OUTPUT->footer();
+print_grade_page_foot();

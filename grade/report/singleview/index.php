@@ -206,4 +206,4 @@ $event = \gradereport_singleview\event\grade_report_viewed::create(
 );
 $event->trigger();
 
-echo $OUTPUT->footer();
+print_grade_page_foot();

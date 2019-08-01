@@ -176,4 +176,9 @@ echo html_writer::table($table2);
 echo $OUTPUT->container_start('buttons');
 echo $OUTPUT->single_button(new moodle_url('edit.php', array('courseid'=>$courseid)), $srtcreatenewscale);
 echo $OUTPUT->container_end();
-echo $OUTPUT->footer();
+
+if ($courseid) {
+    print_grade_page_foot();
+} else {
+    echo $OUTPUT->footer();
+}

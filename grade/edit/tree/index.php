@@ -296,7 +296,7 @@ $PAGE->requires->yui_module('moodle-core-formchangechecker',
 );
 $PAGE->requires->string_for_js('changesmadereallygoaway', 'moodle');
 
-echo $OUTPUT->footer();
+print_grade_page_foot();
 die;
 
 

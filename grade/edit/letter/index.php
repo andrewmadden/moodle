@@ -241,4 +241,4 @@ if (!$edit) {
     $mform->display();
 }
 
-echo $OUTPUT->footer();
+print_grade_page_foot();

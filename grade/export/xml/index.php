@@ -58,7 +58,7 @@ if (($groupmode == SEPARATEGROUPS) &&
     (!$currentgroup) &&
     (!has_capability('moodle/site:accessallgroups', $context))) {
     echo $OUTPUT->heading(get_string("notingroup"));
-    echo $OUTPUT->footer();
+    print_grade_page_foot();
     die;
 }
 
@@ -67,5 +67,5 @@ echo '<div class="clearer"></div>';
 
 $mform->display();
 
-echo $OUTPUT->footer();
+print_grade_page_foot();
 
