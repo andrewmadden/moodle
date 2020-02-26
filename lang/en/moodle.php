@@ -2110,6 +2110,7 @@ $string['upload'] = 'Upload';
 $string['uploadafile'] = 'Upload a file';
 $string['uploadcantwrite'] = 'Failed to write file to disk';
 $string['uploadedfile'] = 'File uploaded successfully';
+$string['uploadedfiledetails'] = 'Uploaded {$a->filename} to {a->component} {$a->filearea} with itemid {$a->itemid}, and is accessible at {$a->url}.';
 $string['uploadedfileto'] = 'Uploaded {$a->file} to {$a->directory}';
 $string['uploadedfiletoobig'] = 'Sorry, but that file is too big (limit is {$a} bytes)';
 $string['uploadextension'] = 'File upload stopped by a PHP extension';

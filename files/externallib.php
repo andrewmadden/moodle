@@ -353,6 +353,18 @@ class core_files_external extends external_api {
             $info = $dir->create_file_from_pathname($filename, $savedfilepath);
             $params = $info->get_params();
             unlink($savedfilepath);
+
+            // Trigger event for file upload.
+            \core_files\event\file_uploaded::create([
+                $params['contextid'],
+                $params['component'],
+                $params['filearea'],
+                $params['itemid'],
+                $params['filepath'],
+                $params['filename'],
+                $info->get_url(),
+            ])->trigger();
+
             return array(
                 'contextid'=>$params['contextid'],
                 'component'=>$params['component'],
