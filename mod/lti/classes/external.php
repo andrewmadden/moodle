@@ -721,6 +721,122 @@ class mod_lti_external extends external_api {
     }
 
     /**
+     * Get parameter definition for get_tool_types_and_proxies().
+     *
+     * @return external_function_parameters
+     */
+    public static function get_tool_types_and_proxies_parameters() {
+        return new external_function_parameters(
+            array(
+                'toolproxyid' => new external_value(PARAM_INT, 'Tool proxy id', VALUE_DEFAULT, 0),
+                'orphanedonly' => new external_value(PARAM_BOOL, 'Orphaned tool types only', VALUE_DEFAULT, 0),
+                'limit' => new external_value(PARAM_INT, 'How many tool types displayed per page', VALUE_DEFAULT, 50),
+                'offset' => new external_value(PARAM_INT, 'Current offset of tool elements', VALUE_DEFAULT, 0),
+            )
+        );
+    }
+
+    /**
+     * Get data for all tool types and tool proxies.
+     *
+     * @param int $toolproxyid The tool proxy id
+     * @param bool $orphanedonly Whether to get orphaned proxies only.
+     * @param int $limit How many elements to return if using pagination.
+     * @param int $offset Which chunk of elements to return is using pagination.
+     * @return array
+     */
+    public static function get_tool_types_and_proxies($toolproxyid, $orphanedonly, $limit, $offset) {
+        $params = self::validate_parameters(self::get_tool_types_and_proxies_parameters(),
+            array(
+                'toolproxyid' => $toolproxyid,
+                'orphanedonly' => $orphanedonly,
+                'limit' => $limit,
+                'offset' => $offset,
+            ));
+        $toolproxyid = $params['toolproxyid'];
+        $orphanedonly = $params['orphanedonly'];
+        $limit = $params['limit'];
+        $offset = $params['offset'];
+
+        $context = context_system::instance();
+        self::validate_context($context);
+        require_capability('moodle/site:config', $context);
+
+        list($proxies, $types) = lti_get_lti_types_and_proxies($limit, $offset, $orphanedonly, $toolproxyid);
+
+        return [
+            'types' => $types,
+            'proxies' => $proxies,
+            'limit' => $limit,
+            'offset' => $offset,
+        ];
+    }
+
+    /**
+     * Get return definition for get_tool_types_and_proxies.
+     *
+     * @return external_single_structure
+     */
+    public static function get_tool_types_and_proxies_returns() {
+        return new external_single_structure([
+            'types' => self::get_tool_types_returns(),
+            'proxies' => self::get_tool_proxies_returns(),
+            'limit' => new external_value(PARAM_INT, 'Limit of how many tool types to show', VALUE_OPTIONAL),
+            'offset' => new external_value(PARAM_INT, 'Offset of tool types', VALUE_OPTIONAL),
+        ]);
+    }
+
+    /**
+     * Get parameter definition for get_tool_types_and_proxies_count().
+     *
+     * @return external_function_parameters
+     */
+    public static function get_tool_types_and_proxies_count_parameters() {
+        return new external_function_parameters(
+            array(
+                'toolproxyid' => new external_value(PARAM_INT, 'Tool proxy id', VALUE_DEFAULT, 0),
+                'orphanedonly' => new external_value(PARAM_BOOL, 'Orphaned tool types only', VALUE_DEFAULT, 0),
+            )
+        );
+    }
+
+    /**
+     * Get count of every tool type and tool proxy.
+     *
+     * @param int $toolproxyid The tool proxy id
+     * @param bool $orphanedonly Whether to get orphaned proxies only.
+     * @return array
+     */
+    public static function get_tool_types_and_proxies_count($toolproxyid, $orphanedonly) {
+        $params = self::validate_parameters(self::get_tool_types_and_proxies_count_parameters(),
+            array(
+                'toolproxyid' => $toolproxyid,
+                'orphanedonly' => $orphanedonly,
+            ));
+        $toolproxyid = $params['toolproxyid'];
+        $orphanedonly = $params['orphanedonly'];
+
+        $context = context_system::instance();
+        self::validate_context($context);
+        require_capability('moodle/site:config', $context);
+
+        return [
+            'count' => lti_get_lti_types_and_proxies_count($orphanedonly, $toolproxyid),
+        ];
+    }
+
+    /**
+     * Get return definition for get_tool_types_and_proxies_count.
+     *
+     * @return external_single_structure
+     */
+    public static function get_tool_types_and_proxies_count_returns() {
+        return new external_single_structure([
+            'count' => new external_value(PARAM_INT, 'Total number of tool types and proxies', VALUE_REQUIRED),
+        ]);
+    }
+
+    /**
      * Returns description of method parameters
      *
      * @return external_function_parameters

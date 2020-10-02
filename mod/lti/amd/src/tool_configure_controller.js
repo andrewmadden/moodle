@@ -25,9 +25,9 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @since      3.1
  */
-define(['jquery', 'core/ajax', 'core/notification', 'core/templates', 'mod_lti/events', 'mod_lti/keys', 'mod_lti/tool_type',
-        'mod_lti/tool_proxy', 'core/str'],
-        function($, ajax, notification, templates, ltiEvents, KEYS, toolType, toolProxy, str) {
+define(['jquery', 'core/ajax', 'core/paged_content_factory', 'core/notification', 'core/templates', 'mod_lti/events',
+        'mod_lti/keys', 'mod_lti/tool_all', 'mod_lti/tool_type', 'mod_lti/tool_proxy', 'core/str'],
+        function($, ajax, pagedContentFactory, notification, templates, ltiEvents, KEYS, toolAll, toolType, toolProxy, str) {
 
     var SELECTORS = {
         EXTERNAL_REGISTRATION_CONTAINER: '#external-registration-container',
@@ -36,6 +36,7 @@ define(['jquery', 'core/ajax', 'core/notification', 'core/templates', 'mod_lti/e
         CARTRIDGE_REGISTRATION_CONTAINER: '#cartridge-registration-container',
         CARTRIDGE_REGISTRATION_FORM: '#cartridge-registration-form',
         ADD_TOOL_FORM: '#add-tool-form',
+        TOOL_CARD_CONTAINER: '#tool-card-container',
         TOOL_LIST_CONTAINER: '#tool-list-container',
         TOOL_CREATE_BUTTON: '#tool-create-button',
         TOOL_CREATE_LTILEGACY_BUTTON: '#tool-createltilegacy-button',
@@ -52,6 +53,17 @@ define(['jquery', 'core/ajax', 'core/notification', 'core/templates', 'mod_lti/e
      */
     var getToolListContainer = function() {
         return $(SELECTORS.TOOL_LIST_CONTAINER);
+    };
+
+    /**
+     * Get the tool card container element.
+     *
+     * @method getToolCardContainer
+     * @private
+     * @return {Object} jQuery object
+     */
+    var getToolCardContainer = function() {
+        return $(SELECTORS.TOOL_CARD_CONTAINER);
     };
 
     /**
@@ -287,29 +299,76 @@ define(['jquery', 'core/ajax', 'core/notification', 'core/templates', 'mod_lti/e
      * @private
      */
     var reloadToolList = function() {
-        var promise = $.Deferred();
-        var container = getToolListContainer();
-        startLoading(container);
-
-        $.when(
-                toolType.query(),
-                toolProxy.query({'orphanedonly': true})
-            )
-            .done(function(types, proxies) {
-                    templates.render('mod_lti/tool_list', {tools: types, proxies: proxies})
-                        .done(function(html, js) {
-                                container.empty();
-                                container.append(html);
-                                templates.runTemplateJS(js);
-                                promise.resolve();
-                            }).fail(promise.reject);
+        var cardContainer = getToolCardContainer();
+        var listContainer = getToolListContainer();
+        var limit = 60;
+        // Get initial data with zero limit and offset.
+        fetchToolCount().done(function(data) {
+            pagedContentFactory.createWithTotalAndLimit(
+                data.count,
+                limit,
+                function(pagesData) {
+                    return pagesData.map(function(pageData) {
+                        return fetchToolData(pageData.limit, pageData.offset)
+                            .then(function(data) {
+                                return renderToolData(data);
+                            });
+                    });
+                },
+                {
+                    'showFirstLast': true
                 })
-            .fail(promise.reject);
+                .done(function(html, js) {
+                // Add the paged content into the page.
+                templates.replaceNodeContents(cardContainer, html, js);
+                })
+                .always(stopLoading(listContainer));
+        });
+        startLoading(listContainer);
+    };
 
-        promise.fail(notification.exception)
-            .always(function() {
-                    stopLoading(container);
-                });
+    /**
+     * Fetch the count of tool type and proxy datasets.
+     *
+     * @return {*|void}
+     */
+    var fetchToolCount = function() {
+        return toolAll.count({'orphanedonly': true})
+            .done(function(data) {
+                return data;
+            });
+    };
+
+    /**
+     * Fetch the data for tool type and proxy cards.
+     *
+     * @param {number} limit Maximum number of datasets to get.
+     * @param {number} offset Offset count for fetching the data.
+     * @return {*|void}
+     */
+    var fetchToolData = function(limit, offset) {
+        return toolAll.query({'orphanedonly': true, 'limit': limit, 'offset': offset})
+            .done(function(data) {
+                return data;
+            });
+    };
+
+    /**
+     * Render Tool and Proxy cards from data.
+     *
+     * @param {Object} data Contains arrays of data objects to populate cards.
+     * @return {*}
+     */
+    var renderToolData = function(data) {
+        var context = {
+            tools: data.types,
+            proxies: data.proxies,
+        };
+        return templates.render('mod_lti/tool_list', context)
+            .done(function(html, js) {
+                    return {html, js};
+                }
+            );
     };
 
     /**
